@@ -17,9 +17,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--data', type = str, default = os.getcwd(), help = 'absolute path to datasets')
 parser.add_argument('-e', '--epochs', type = int, default = 30, help = 'total number of training epochs')
 parser.add_argument('-f', '--file', type = str, default = None, help = 'absolute path to file to dump stdout')
-parser.add_argument('-l', '--load', action = 'store_true', help = 'load pre-trained neural net')
-parser.add_argument('-n', '--net', type = str, default = os.getcwd(), help = 'absolute path to save or load neural net')
-parser.add_argument('-p', '--predict', action = 'store_true', help = 'evaluate neural net performance on test set')
+parser.add_argument('-l', '--load', action = 'store_true', help = 'load pre-trained model')
+parser.add_argument('-m', '--model', type = str, default = os.getcwd(), help = 'absolute path to save or load model')
+parser.add_argument('-p', '--predict', action = 'store_true', help = 'evaluate model performance on test set')
 parser.add_argument('-s', '--split', type = float, default = 0.8, help = 'training and validation split ratio')
 parser.add_argument('-t', '--train_batch', type = int, default = 128, help = 'training batch size')
 parser.add_argument('-v', '--val_batch', type = int, default = 1, help = 'validation and test batch size')
@@ -36,20 +36,20 @@ train_loader, val_loader = data.get_data_loaders(args.data, train_ratio = args.s
 print('training set: {}'.format(len(train_loader) * args.train_batch))
 print('validation set: {}\n'.format(len(val_loader) * args.val_batch))
 
-# instantiate neural net
+# instantiate model
 if args.load:
-    print('loading pre-trained neural net\n')
-    net = torch.load(args.net, map_location = device)
+    print('loading pre-trained model\n')
+    model = torch.load(args.model, map_location = device)
 else:
-    net = dnn.Net().to(device)
+    model = dnn.Model().to(device)
 
 # define loss function and optimizer
 criterion = nn.MSELoss()
-optimizer = optim.Adam(net.parameters())
+optimizer = optim.Adam(model.parameters())
 
-# train neural net
+# train model
 if not args.predict:
-    print('training neural net\n')
+    print('training model\n')
 
     # setup visdom for loss history visualization
     viz = visdom.Visdom()
@@ -74,7 +74,7 @@ if not args.predict:
             # optimize
             optimizer.zero_grad()
 
-            outputs = net(inputs)
+            outputs = model(inputs)
             loss = criterion(outputs, inputs)
             loss.backward()
             optimizer.step()
@@ -90,29 +90,29 @@ if not args.predict:
                 viz.line(X = np.array([((epoch * len(train_loader)) + batch_idx + 1), ((epoch * len(train_loader)) + batch_idx + 1)]), 
                         Y = np.array([loss.item(), loss.item()]), env = env_name, win = plot, name = 'train', update = 'append')
 
-            # save neural net
+            # save model
             if loss.item() < best_loss:
-                torch.save(net, args.net)
+                torch.save(model, args.model)
 
             # print initial train loss
             if batch_idx == 0:
                 tqdm.tqdm.write('initial training loss: {:.2f}'.format(loss.item()), file = args.file)
 
-            # evaluate net performance on val set
+            # evaluate model performance on val set
             elif batch_idx == (len(train_loader) - 1):
-                net.eval()
+                model.eval()
                 with torch.no_grad():
                     running_val_loss = 0
                     for val_batch_idx, val_data in enumerate(val_loader):
                         val_inputs, _ = val_data
                         val_inputs = val_inputs.to(device)
 
-                        val_outputs = net(val_inputs)
+                        val_outputs = model(val_inputs)
                         val_loss = criterion(val_outputs, val_inputs)
 
                         running_val_loss += val_loss.item()
                 
-                net.train()
+                model.train()
 
             # update progress bar
             pbar.desc = desc.format(loss.item())
@@ -125,7 +125,7 @@ if not args.predict:
         # close progress bar
         pbar.close()
 
-# evaluate neural net
+# evaluate model
 else:
     print('evaluation mode\n')
 
@@ -136,15 +136,15 @@ else:
     desc = "ITERATION - loss: {:.2f}"
     pbar = tqdm.tqdm(desc = desc.format(0), total = len(val_loader), leave = False, file = args.file, initial = 0)
 
-    # evaluate neural net performance on test set
-    net.eval()
+    # evaluate model performance on test set
+    model.eval()
     with torch.no_grad():
         running_test_loss = 0
         for test_batch_idx, test_data in enumerate(test_loader):
             test_inputs, _ = test_data
             test_inputs = test_inputs.to(device)
 
-            test_outputs = net(test_inputs)
+            test_outputs = model(test_inputs)
             test_loss = criterion(test_outputs, test_inputs)
 
             running_test_loss += test_loss.item()
