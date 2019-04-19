@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # define class
-class Net(nn.Module):
+class Model(nn.Module):
     '''conv. autoencoder'''
     def __init__(self):
         '''constructor'''
