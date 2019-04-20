@@ -10,7 +10,7 @@ import tqdm
 import visdom
 
 import data
-import dnn
+import model
 
 # create argument parser
 parser = argparse.ArgumentParser()
