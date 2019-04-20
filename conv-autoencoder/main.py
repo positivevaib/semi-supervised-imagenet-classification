@@ -42,7 +42,7 @@ if args.load:
     print('loading pre-trained model\n')
     model = torch.load(args.model, map_location = device)
 else:
-    model = dnn.Model().to(device)
+    model = model.Model().to(device)
 
 # define loss function, optimizer and learning rate scheduler
 criterion = nn.MSELoss()
