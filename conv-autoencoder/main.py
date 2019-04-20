@@ -56,14 +56,14 @@ if not args.predict:
     env_name = 'semi-supervised-imagenet-classification'
     plot = None
 
+    best_loss = float('inf')
+    no_improvement = 0
     for epoch in range(args.epochs):
         # setup progress bar
         desc = "ITERATION - loss: {:.2f}"
         pbar = tqdm.tqdm(desc = desc.format(0), total = len(train_loader), leave = False, file = args.file, initial = 0)
 
         tqdm.tqdm.write('epoch {} of {}'.format(epoch + 1, args.epochs), file = args.file)
-        
-        best_loss = float('inf')
 
         batch_idx = None
         running_loss = 0
@@ -89,11 +89,6 @@ if not args.predict:
             else:
                 viz.line(X = np.array([((epoch * len(train_loader)) + batch_idx + 1), ((epoch * len(train_loader)) + batch_idx + 1)]), 
                         Y = np.array([loss.item(), loss.item()]), env = env_name, win = plot, name = 'train', update = 'append')
-
-            # save model
-            if loss.item() < best_loss:
-                torch.save(model, args.model)
-                best_loss = loss.item()
 
             # print initial train loss
             if batch_idx == 0:
@@ -125,6 +120,19 @@ if not args.predict:
 
         # close progress bar
         pbar.close()
+
+        # save model
+        if loss.item() < best_loss:
+            torch.save(model, args.model)
+            best_loss = loss.item()
+            no_improvement = 0
+        else:
+            no_improvement += 1
+
+        # apply early stopping
+        if no_improvement == 5:
+            print('applying early stopping')
+            break
 
 # evaluate model
 else:
