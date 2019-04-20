@@ -93,6 +93,7 @@ if not args.predict:
             # save model
             if loss.item() < best_loss:
                 torch.save(model, args.model)
+                best_loss = loss.item()
 
             # print initial train loss
             if batch_idx == 0:
