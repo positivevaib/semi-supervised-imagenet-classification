@@ -79,7 +79,7 @@ if not args.predict:
             outputs = model(inputs)
             loss = criterion(outputs, inputs)
             loss.backward()
-            scheduler.step()
+            optimizer.step()
 
             running_loss += loss.item()
 
@@ -109,6 +109,11 @@ if not args.predict:
                         val_loss = criterion(val_outputs, val_inputs)
 
                         running_val_loss += val_loss.item()
+
+                    avg_val_loss = running_val_loss / (val_batch_idx + 1)
+
+                    # invoke learning rate scheduler
+                    scheduler.step()
                 
                 model.train()
 
@@ -117,7 +122,7 @@ if not args.predict:
             pbar.update()
         
         # print epoch end loss
-        tqdm.tqdm.write('training loss: {:.2f}, validation loss: {:.2f}\n'.format(running_loss / (batch_idx + 1), running_val_loss / (val_batch_idx + 1)), 
+        tqdm.tqdm.write('training loss: {:.2f}, validation loss: {:.2f}\n'.format(running_loss / (batch_idx + 1), avg_val_loss), 
                         file = args.file)
 
         # close progress bar
