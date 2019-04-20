@@ -14,15 +14,16 @@ import dnn
 
 # create argument parser
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--data', type = str, default = os.getcwd(), help = 'absolute path to datasets')
-parser.add_argument('-e', '--epochs', type = int, default = 30, help = 'total number of training epochs')
-parser.add_argument('-f', '--file', type = str, default = None, help = 'absolute path to file to dump stdout')
-parser.add_argument('-l', '--load', action = 'store_true', help = 'load pre-trained model')
-parser.add_argument('-m', '--model', type = str, default = os.getcwd(), help = 'absolute path to save or load model')
-parser.add_argument('-p', '--predict', action = 'store_true', help = 'evaluate model performance on test set')
-parser.add_argument('-s', '--split', type = float, default = 0.8, help = 'training and validation split ratio')
-parser.add_argument('-t', '--train_batch', type = int, default = 128, help = 'training batch size')
-parser.add_argument('-v', '--val_batch', type = int, default = 1, help = 'validation and test batch size')
+parser.add_argument('--data', type = str, default = os.getcwd(), help = 'absolute path to datasets')
+parser.add_argument('--epochs', type = int, default = 30, help = 'total number of training epochs')
+parser.add_argument('--file', type = str, default = None, help = 'absolute path to file to dump stdout')
+parser.add_argument('--learning_rate', type = float, default = 0.001, help = 'initial learning rate')
+parser.add_argument('--load', action = 'store_true', help = 'load pre-trained model')
+parser.add_argument('--model', type = str, default = os.getcwd(), help = 'absolute path to save or load model')
+parser.add_argument('--predict', action = 'store_true', help = 'evaluate model performance on test set')
+parser.add_argument('--split', type = float, default = 0.8, help = 'training and validation split ratio')
+parser.add_argument('--train_batch', type = int, default = 128, help = 'training batch size')
+parser.add_argument('--val_batch', type = int, default = 1, help = 'validation and test batch size')
 
 args = parser.parse_args()
 
@@ -43,9 +44,10 @@ if args.load:
 else:
     model = dnn.Model().to(device)
 
-# define loss function and optimizer
+# define loss function, optimizer and learning rate scheduler
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters())
+optimizer = optim.Adam(model.parameters(), lr = args.learning_rate)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience = 0, verbose = True)
 
 # train model
 if not args.predict:
@@ -77,7 +79,7 @@ if not args.predict:
             outputs = model(inputs)
             loss = criterion(outputs, inputs)
             loss.backward()
-            optimizer.step()
+            scheduler.step()
 
             running_loss += loss.item()
 
