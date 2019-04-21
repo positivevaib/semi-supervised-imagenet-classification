@@ -113,7 +113,7 @@ if not args.predict:
                     avg_val_loss = running_val_loss / (val_batch_idx + 1)
 
                     # invoke learning rate scheduler
-                    scheduler.step()
+                    scheduler.step(metrics = avg_val_loss)
                 
                 model.train()
 
