@@ -236,7 +236,7 @@ def train():
         loss_gen /= batch_num
         accuracy /= batch_num
         print("Iteration %d, loss_supervised = %.4f, loss_unsupervised = %.4f, loss_gen = %.4f train acc = %.4f" % (epoch, loss_supervised, loss_unsupervised, loss_gen, accuracy))
-        sys.stdout.flush()
+        #sys.stdout.flush()
         if (epoch + 1) % args.eval_interval == 0:
             print("Eval: correct %d / %d"  % (eval(), len(test_loader)))
             torch.save(netG, os.path.join(args.savedir, 'netG.pkl'))
@@ -267,7 +267,10 @@ def eval():
         return s
     """
     
-
+# create folders
+if not os.path.exists(args.savedir):
+    os.makedirs(args.savedir)
+    
 # instantiate model
 if args.load:
     print('loading pre-trained model\n')
