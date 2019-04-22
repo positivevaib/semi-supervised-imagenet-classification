@@ -14,16 +14,18 @@ import model
 
 # create argument parser
 parser = argparse.ArgumentParser()
-parser.add_argument('--data', type = str, default = os.getcwd(), help = 'absolute path to datasets')
+parser.add_argument('--checkpoint', type = str, default = None, help = 'absolute path to model checkpoint')
+parser.add_argument('--data', type = str, default = None, help = 'absolute path to datasets')
 parser.add_argument('--epochs', type = int, default = 30, help = 'total number of training epochs')
 parser.add_argument('--file', type = str, default = None, help = 'absolute path to file to dump stdout')
 parser.add_argument('--learning_rate', type = float, default = 0.001, help = 'initial learning rate')
 parser.add_argument('--load', action = 'store_true', help = 'load pre-trained model')
-parser.add_argument('--model', type = str, default = os.getcwd(), help = 'absolute path to save or load model')
+parser.add_argument('--model', type = str, default = None, help = 'absolute path to save or load model')
 parser.add_argument('--predict', action = 'store_true', help = 'evaluate model performance on test set')
+parser.add_argument('--resume', action = 'store_true', help = 'resume training from checkpoint')
 parser.add_argument('--split', type = float, default = 0.8, help = 'training and validation split ratio')
 parser.add_argument('--train_batch', type = int, default = 128, help = 'training batch size')
-parser.add_argument('--val_batch', type = int, default = 1, help = 'validation and test batch size')
+parser.add_argument('--val_batch', type = int, default = 640, help = 'validation and test batch size')
 
 args = parser.parse_args()
 
@@ -49,6 +51,12 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr = args.learning_rate)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience = 0, verbose = True)
 
+# load model checkpoint
+if args.resume:
+    model = torch.load(args.checkpoint['model_state_dict'], map_location = device)
+    optimizer = torch.load(args.checkpoint['optimizer_state_dict'], map_location = device)
+    scheduler = torch.load(args.checkpoint['scheduler_state_dict'], map_location = device)
+
 # train model
 if not args.predict:
     print('training model\n')
@@ -58,9 +66,17 @@ if not args.predict:
     env_name = 'semi-supervised-imagenet-classification'
     plot = None
 
-    best_loss = float('inf')
-    no_improvement = 0
-    for epoch in range(args.epochs):
+    # load checkpoints, if training to be resumed
+    if args.resume:
+        best_val_loss = args.checkpoint['best_val_loss']
+        no_improvement = args.checkpoint['no_improvement']
+        start_epoch = args.checkpoint['epoch']
+    else:
+        best_val_loss = float('inf')
+        no_improvement = 0
+        start_epoch = 0        
+
+    for epoch in range(start_epochs, args.epochs):
         # setup progress bar
         desc = "ITERATION - loss: {:.2f}"
         pbar = tqdm.tqdm(desc = desc.format(0), total = len(train_loader), leave = False, file = args.file, initial = 0)
@@ -96,26 +112,25 @@ if not args.predict:
             if batch_idx == 0:
                 tqdm.tqdm.write('initial training loss: {:.2f}'.format(loss.item()), file = args.file)
 
-            # evaluate model performance on val set
-            elif batch_idx == (len(train_loader) - 1):
-                model.eval()
-                with torch.no_grad():
-                    running_val_loss = 0
-                    for val_batch_idx, val_data in enumerate(val_loader):
-                        val_inputs, _ = val_data
-                        val_inputs = val_inputs.to(device)
+        # evaluate model performance on val set
+        model.eval()
+        with torch.no_grad():
+            running_val_loss = 0
+            for val_batch_idx, val_data in enumerate(val_loader):
+                val_inputs, _ = val_data
+                val_inputs = val_inputs.to(device)
 
-                        val_outputs = model(val_inputs)
-                        val_loss = criterion(val_outputs, val_inputs)
+                val_outputs = model(val_inputs)
+                val_loss = criterion(val_outputs, val_inputs)
 
-                        running_val_loss += val_loss.item()
+                running_val_loss += val_loss.item()
 
-                    avg_val_loss = running_val_loss / (val_batch_idx + 1)
+            avg_val_loss = running_val_loss / (val_batch_idx + 1)
 
-                    # invoke learning rate scheduler
-                    scheduler.step(metrics = avg_val_loss)
-                
-                model.train()
+            # invoke learning rate scheduler
+            scheduler.step(metrics = avg_val_loss)
+        
+        model.train()
 
             # update progress bar
             pbar.desc = desc.format(loss.item())
@@ -128,15 +143,18 @@ if not args.predict:
         # close progress bar
         pbar.close()
 
-        # save model
-        if loss.item() < best_loss:
+        # save checkpoint
+        torch.save({'epoch': epoch, 'model_state_dict': mode.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 
+                    'scheduler_state_dict': scheduler.state_dict(), 'best_val_loss': best_val_loss, 'no_improvement': no_improvement})
+
+        # save model and apply early stopping, if applicable
+        if avg_val_loss < best_val_loss:
             torch.save(model, args.model)
-            best_loss = loss.item()
+            best_val_loss = avg_val_loss
             no_improvement = 0
         else:
             no_improvement += 1
 
-        # apply early stopping
         if no_improvement == 5:
             print('applying early stopping')
             break
