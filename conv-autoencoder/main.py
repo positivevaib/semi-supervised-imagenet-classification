@@ -76,7 +76,7 @@ if not args.predict:
         no_improvement = 0
         start_epoch = 0        
 
-    for epoch in range(start_epochs, args.epochs):
+    for epoch in range(start_epoch, args.epochs):
         # setup progress bar
         desc = "ITERATION - loss: {:.2f}"
         pbar = tqdm.tqdm(desc = desc.format(0), total = len(train_loader), leave = False, file = args.file, initial = 0)
@@ -145,8 +145,8 @@ if not args.predict:
         pbar.close()
 
         # save checkpoint
-        torch.save({'epoch': epoch, 'model_state_dict': mode.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 
-                    'scheduler_state_dict': scheduler.state_dict(), 'best_val_loss': best_val_loss, 'no_improvement': no_improvement})
+        torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 
+                    'scheduler_state_dict': scheduler.state_dict(), 'best_val_loss': best_val_loss, 'no_improvement': no_improvement}, args.checkpoint)
 
         # save model and apply early stopping, if applicable
         if avg_val_loss < best_val_loss:
