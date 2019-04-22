@@ -112,25 +112,26 @@ if not args.predict:
             if batch_idx == 0:
                 tqdm.tqdm.write('initial training loss: {:.2f}'.format(loss.item()), file = args.file)
 
-        # evaluate model performance on val set
-        model.eval()
-        with torch.no_grad():
-            running_val_loss = 0
-            for val_batch_idx, val_data in enumerate(val_loader):
-                val_inputs, _ = val_data
-                val_inputs = val_inputs.to(device)
+            # evaluate model performance on val set
+            elif batch_idx == (len(train_loader) - 1):
+                model.eval()
+                with torch.no_grad():
+                    running_val_loss = 0
+                    for val_batch_idx, val_data in enumerate(val_loader):
+                        val_inputs, _ = val_data
+                        val_inputs = val_inputs.to(device)
 
-                val_outputs = model(val_inputs)
-                val_loss = criterion(val_outputs, val_inputs)
+                        val_outputs = model(val_inputs)
+                        val_loss = criterion(val_outputs, val_inputs)
 
-                running_val_loss += val_loss.item()
+                        running_val_loss += val_loss.item()
 
-            avg_val_loss = running_val_loss / (val_batch_idx + 1)
+                    avg_val_loss = running_val_loss / (val_batch_idx + 1)
 
-            # invoke learning rate scheduler
-            scheduler.step(metrics = avg_val_loss)
-        
-        model.train()
+                    # invoke learning rate scheduler
+                    scheduler.step(metrics = avg_val_loss)
+                
+                model.train()
 
             # update progress bar
             pbar.desc = desc.format(loss.item())
