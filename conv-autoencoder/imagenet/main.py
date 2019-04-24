@@ -26,6 +26,7 @@ parser.add_argument('--resume', action = 'store_true', help = 'resume training f
 parser.add_argument('--split', type = float, default = 0.8, help = 'training and validation split ratio')
 parser.add_argument('--train_batch', type = int, default = 128, help = 'training batch size')
 parser.add_argument('--val_batch', type = int, default = 640, help = 'validation and test batch size')
+parser.add_argument('--visdom', action = 'store_true', help = 'create live training plots')
 
 args = parser.parse_args()
 
@@ -62,9 +63,10 @@ if not args.predict:
     print('training model\n')
 
     # setup visdom for loss history visualization
-    viz = visdom.Visdom()
-    env_name = 'semi-supervised-imagenet-classification'
-    plot = None
+    if args.visdom():
+        viz = visdom.Visdom()
+        env_name = 'semi-supervised-imagenet-classification'
+        plot = None
 
     # load checkpoints, if training to be resumed
     if args.resume:
@@ -100,13 +102,14 @@ if not args.predict:
             running_loss += loss.item()
 
             # plot loss history
-            if not plot:
-                plot = viz.line(X = np.array([((epoch * len(train_loader)) + batch_idx + 1), ((epoch * len(train_loader)) + batch_idx + 1)]), 
-                                Y = np.array([loss.item(), loss.item()]), env = env_name, 
-                                opts = dict(legend = ['train'], title = 'loss hist.', xlabel = 'iters.', ylabel = 'loss'))
-            else:
-                viz.line(X = np.array([((epoch * len(train_loader)) + batch_idx + 1), ((epoch * len(train_loader)) + batch_idx + 1)]), 
-                        Y = np.array([loss.item(), loss.item()]), env = env_name, win = plot, name = 'train', update = 'append')
+            if args.visdom():
+                if not plot:
+                    plot = viz.line(X = np.array([((epoch * len(train_loader)) + batch_idx + 1), ((epoch * len(train_loader)) + batch_idx + 1)]), 
+                                    Y = np.array([loss.item(), loss.item()]), env = env_name, 
+                                    opts = dict(legend = ['train'], title = 'loss hist.', xlabel = 'iters.', ylabel = 'loss'))
+                else:
+                    viz.line(X = np.array([((epoch * len(train_loader)) + batch_idx + 1), ((epoch * len(train_loader)) + batch_idx + 1)]), 
+                            Y = np.array([loss.item(), loss.item()]), env = env_name, win = plot, name = 'train', update = 'append')
 
             # print initial train loss
             if batch_idx == 0:
