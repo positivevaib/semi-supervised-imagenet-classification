@@ -139,7 +139,7 @@ class ResNet18(nn.Module):
 
     def forward(self, x):
         '''forward prop'''
-        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
+        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2, padding = 1)
         x = self.conv2(x)
         x = self.conv3(x)
         x = self.conv4(x)
@@ -165,7 +165,7 @@ class ResNet34(nn.Module):
 
     def forward(self, x):
         '''forward prop'''
-        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
+        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2, padding = 1)
         x = self.conv2(x)
         x = self.conv3(x)
         x = self.conv4(x)
@@ -192,7 +192,7 @@ class ResNet50(nn.Module):
 
     def forward(self, x):
         '''forward prop'''
-        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
+        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2, padding = 1)
         x = self.conv2(x)
         x = self.conv3(x)
         x = self.conv4(x)
@@ -212,18 +212,16 @@ class ResNet101(nn.Module):
         self.conv2 = nn.Sequential(BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4))
         self.conv3 = nn.Sequential(BottleneckProjectionBlock(64, 2), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4), 
                                     BottleneckIdentityBlock(128, 4))
-
         self.conv4 = [BottleneckProjectionBlock(128, 2)]
         for _ in range(22):
             self.conv4.append(BottleneckIdentityBlock(256, 4))
         self.conv4 = nn.Sequential(*self.conv4)
-
         self.conv5 = nn.Sequential(BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4))
         self.out = nn.Linear(2048, 4)
          
     def forward(self, x):
         '''forward prop'''
-        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
+        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2, padding = 1)
         x = self.conv2(x)
         x = self.conv3(x)
         x = self.conv4(x)
@@ -241,23 +239,20 @@ class ResNet152(nn.Module):
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 7, stride = 2, padding = 3)
         self.bn = nn.BatchNorm2d(64)
         self.conv2 = nn.Sequential(BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4))
-
         self.conv3 = [BottleneckProjectionBlock(64, 2)]
         for _ in range(7):
             self.conv3.append(BottleneckIdentityBlock(128, 4))
         self.conv3 = nn.Sequential(*self.conv3)
-
         self.conv4 = [BottleneckProjectionBlock(128, 2)]
         for _ in range(35):
             self.conv4.append(BottleneckIdentityBlock(256, 4))
         self.conv4 = nn.Sequential(*self.conv4)
-
         self.conv5 = nn.Sequential(BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4))
         self.out = nn.Linear(2048, 4)
          
     def forward(self, x):
         '''forward prop'''
-        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
+        x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2, padding = 1)
         x = self.conv2(x)
         x = self.conv3(x)
         x = self.conv4(x)
