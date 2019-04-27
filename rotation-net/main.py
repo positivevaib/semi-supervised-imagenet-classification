@@ -38,6 +38,9 @@ parser.add_argument('--learning_rate',
 parser.add_argument('--load',
                     action='store_true',
                     help='load pre-trained model')
+parser.add_argument('--matplotlib',
+                    action='store_true',
+                    help='display matplotlib figure')
 parser.add_argument('--pbar_file',
                     type=str,
                     default=None,
@@ -152,7 +155,7 @@ if not args.evaluate:
                     args.self_supervised_epochs, device,
                     args.self_supervised_model, args.checkpoint,
                     args.self_supervised_history, args.resume, args.visdom,
-                    args.environment, args.pbar_file)
+                    args.environment, args.matplotlib, args.pbar_file)
 
     # perform supervised training
     if args.supervised:
@@ -182,7 +185,7 @@ if not args.evaluate:
                     criterion, optimizer, scheduler, args.supervised_epochs,
                     device, args.supervised_model, args.checkpoint,
                     args.supervised_history, args.resume, args.visdom,
-                    args.environment, args.pbar_file)
+                    args.environment, args.matplotlib, args.pbar_file)
 
 # evaluate model
 else:
