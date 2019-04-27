@@ -128,13 +128,13 @@ class BottleneckIdentityBlock(nn.Module):
 class BottleneckProjectionBlock(nn.Module):
     '''resnet bottleneck projection block'''
 
-    def __init__(self, channels, factor=2):
+    def __init__(self, channels, factor=2, stride=2):
         '''constructor'''
         super().__init__()
         self.conv1 = nn.Conv2d(channels,
                                int(channels / factor),
                                kernel_size=1,
-                               stride=2)
+                               stride=stride)
         self.conv2 = nn.Conv2d(int(channels / factor),
                                int(channels / factor),
                                kernel_size=3,
@@ -146,7 +146,7 @@ class BottleneckProjectionBlock(nn.Module):
         self.proj = nn.Conv2d(channels,
                               int(channels * (4 / factor)),
                               kernel_size=1,
-                              stride=2)
+                              stride=stride)
         self.bn3_proj = nn.BatchNorm2d(int(channels * (4 / factor)))
 
     def forward(self, x):
@@ -191,6 +191,7 @@ class ResNet18(nn.Module):
         x = self.conv4(x)
         x = self.conv5(x)
         x = F.avg_pool2d(x, kernel_size=3)
+        x = x.view(-1, 2048)
         x = self.out(x)
 
         return x
@@ -233,6 +234,7 @@ class ResNet34(nn.Module):
         x = self.conv4(x)
         x = self.conv5(x)
         x = F.avg_pool2d(x, kernel_size=3)
+        x = x.view(-1, 2048)
         x = self.out(x)
 
         return x
@@ -246,9 +248,9 @@ class ResNet50(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = nn.Sequential(BottleneckProjectionBlock(64, factor=1),
-                                   BottleneckIdentityBlock(256),
-                                   BottleneckIdentityBlock(256))
+        self.conv2 = nn.Sequential(
+            BottleneckProjectionBlock(64, factor=1, stride=1),
+            BottleneckIdentityBlock(256), BottleneckIdentityBlock(256))
         self.conv3 = nn.Sequential(BottleneckProjectionBlock(256),
                                    BottleneckIdentityBlock(512),
                                    BottleneckIdentityBlock(512),
@@ -275,6 +277,7 @@ class ResNet50(nn.Module):
         x = self.conv4(x)
         x = self.conv5(x)
         x = F.avg_pool2d(x, kernel_size=3)
+        x = x.view(-1, 2048)
         x = self.out(x)
 
         return x
@@ -288,9 +291,9 @@ class ResNet101(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = nn.Sequential(BottleneckProjectionBlock(64, factor=1),
-                                   BottleneckIdentityBlock(256),
-                                   BottleneckIdentityBlock(256))
+        self.conv2 = nn.Sequential(
+            BottleneckProjectionBlock(64, factor=1, stride=1),
+            BottleneckIdentityBlock(256), BottleneckIdentityBlock(256))
         self.conv3 = nn.Sequential(BottleneckProjectionBlock(256),
                                    BottleneckIdentityBlock(512),
                                    BottleneckIdentityBlock(512),
@@ -315,6 +318,7 @@ class ResNet101(nn.Module):
         x = self.conv4(x)
         x = self.conv5(x)
         x = F.avg_pool2d(x, kernel_size=3)
+        x = x.view(-1, 2048)
         x = self.out(x)
 
         return x
@@ -328,9 +332,9 @@ class ResNet152(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = nn.Sequential(BottleneckProjectionBlock(64, factor=1),
-                                   BottleneckIdentityBlock(256),
-                                   BottleneckIdentityBlock(256))
+        self.conv2 = nn.Sequential(
+            BottleneckProjectionBlock(64, factor=1, stride=1),
+            BottleneckIdentityBlock(256), BottleneckIdentityBlock(256))
         self.conv3 = [BottleneckProjectionBlock(256)]
         for _ in range(7):
             self.conv3.append(BottleneckIdentityBlock(512))
@@ -355,6 +359,7 @@ class ResNet152(nn.Module):
         x = self.conv4(x)
         x = self.conv5(x)
         x = F.avg_pool2d(x, kernel_size=3)
+        x = x.view(-1, 2048)
         x = self.out(x)
 
         return x
