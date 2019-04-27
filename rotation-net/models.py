@@ -83,9 +83,9 @@ class BottleneckIdentityBlock(nn.Module):
     def __init__(self, channels, reduce = True):
         '''constructor'''
         super().__init__()
-        self.conv1 = nn.Conv2d(channels, (channels / 4) if reduce else channels, kernel_size = 1)
-        self.conv2 = nn.Conv2d((channels / 4) if reduce else channels, (channels / 4) if reduce else channels, kernel_size = 3, padding = 2)
-        self.conv3 = nn.Conv2d((channels / 4) if reduce else channels, (channels * 4), kernel_size = 1)
+        self.conv1 = nn.Conv2d(channels, int(channels / 4) if reduce else channels, kernel_size = 1)
+        self.conv2 = nn.Conv2d(int(channels / 4) if reduce else channels, int(channels / 4) if reduce else channels, kernel_size = 3, padding = 2)
+        self.conv3 = nn.Conv2d(int(channels / 4) if reduce else channels, int(channels * 4), kernel_size = 1)
         self.bn = nn.BatchNorm2d(channels)
 
     def forward(self, x):
@@ -104,9 +104,9 @@ class BottleneckProjectionBlock(nn.Module):
     def __init__(self, channels):
         '''constructor'''
         super().__init__()
-        self.conv1 = nn.Conv2d(channels, (channels / 4) if reduce else channels, kernel_size = 1)
-        self.conv2 = nn.Conv2d((channels / 4) if reduce else channels, (channels / 4) if reduce else channels, kernel_size = 3, padding = 2)
-        self.conv3 = nn.Conv2d((channels / 4) if reduce else channels, (channels * 4), kernel_size = 1)
+        self.conv1 = nn.Conv2d(channels, int(channels / 4) if reduce else channels, kernel_size = 1)
+        self.conv2 = nn.Conv2d(int(channels / 4) if reduce else channels, int(channels / 4) if reduce else channels, kernel_size = 3, padding = 2)
+        self.conv3 = nn.Conv2d(int(channels / 4) if reduce else channels, int(channels * 4), kernel_size = 1)
         self.bn = nn.BatchNorm2d(channels)
         self.proj = nn.Conv2d(channels, (channels * 4), kernel_size = 1, stride = 2)
 
