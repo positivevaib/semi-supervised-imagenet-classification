@@ -138,11 +138,10 @@ class ResNet18(nn.Module):
     def forward(self, x):
         '''forward prop'''
         x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
-
-        for layer in [self.conv2, self.conv3, self.conv4, self.conv5]:
-            for i in range(len(layer)):
-                x = layer[i](x)
-
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
         x = F.avg_pool2d(self.conv5_2(x), kernel_size = 3)
         x = self.out(x)
 
@@ -165,11 +164,10 @@ class ResNet34(nn.Module):
     def forward(self, x):
         '''forward prop'''
         x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
-
-        for layer in [self.conv2, self.conv3, self.conv4, self.conv5]:
-            for i in range(len(layer)):
-                x = layer[i](x)
-
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
         x = F.avg_pool2d(self.conv5_2(x), kernel_size = 3)
         x = self.out(x)
 
@@ -192,11 +190,10 @@ class ResNet50(nn.Module):
     def forward(self, x):
         '''forward prop'''
         x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
-
-        for layer in [self.conv2, self.conv3, self.conv4, self.conv5]:
-            for i in range(len(layer)):
-                x = layer[i](x)
-
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
         x = F.avg_pool2d(self.conv5_2(x), kernel_size = 3)
         x = self.out(x)
 
@@ -223,11 +220,10 @@ class ResNet101(nn.Module):
     def forward(self, x):
         '''forward prop'''
         x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
-
-        for layer in [self.conv2, self.conv3, self.conv4, self.conv5]:
-            for i in range(len(layer)):
-                x = layer[i](x)
-
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
         x = F.avg_pool2d(self.conv5_2(x), kernel_size = 3)
         x = self.out(x)
 
@@ -258,11 +254,10 @@ class ResNet152(nn.Module):
     def forward(self, x):
         '''forward prop'''
         x = F.max_pool2d(F.relu(self.bn(self.conv1(x))), kernel_size = 3, stride = 2)
-
-        for layer in [self.conv2, self.conv3, self.conv4, self.conv5]:
-            for i in range(len(layer)):
-                x = layer[i](x)
-
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
         x = F.avg_pool2d(self.conv5_2(x), kernel_size = 3)
         x = self.out(x)
 
