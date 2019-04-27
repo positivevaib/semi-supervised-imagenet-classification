@@ -15,7 +15,7 @@ import evaluate
 # define function
 def train(model, train_loader, train_size, val_loader, val_size, criterion,
           optimizer, scheduler, epochs, device, model_path, checkpoint,
-          hist_path, resume, visdom, environment, pbar_file):
+          hist_path, resume, visdom, environment, matplotlib, pbar_file):
     '''train model'''
     # setup loss and accuracy visualization
     if visdom:
@@ -178,7 +178,7 @@ def train(model, train_loader, train_size, val_loader, val_size, criterion,
             pickle.dump(hist, hist_file)
 
     # visualize losses and accuracies
-    if not visdom:
+    if not visdom and matplotlib:
         for subplot in ['loss', 'acc']:
             if subplot == 'loss':
                 plt.subplot(1, 2, 1)
