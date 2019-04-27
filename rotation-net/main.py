@@ -1,29 +1,35 @@
 # import dependencies
 import argparse
-import os
 
-import numpy as np
 import torch
 import torch.nn as nn 
 import torch.optim as optim
-import tqdm
-import visdom
 
 import data
-import model
+import models
+import train
+import evaluate
 
 # create argument parser
 parser = argparse.ArgumentParser()
+parser.add_argument('--architecture', type = str, default = 'alexnet', help = 'type of model architecture to use')
 parser.add_argument('--checkpoint', type = str, default = None, help = 'absolute path to model checkpoint')
 parser.add_argument('--data', type = str, default = None, help = 'absolute path to datasets')
-parser.add_argument('--epochs', type = int, default = 30, help = 'total number of training epochs')
-parser.add_argument('--file', type = str, default = None, help = 'absolute path to file to dump stdout')
+parser.add_argument('--environment', type = str, default = 'semi-supervised-imagenet-classification', help = 'visdom environment name')
+parser.add_argument('--evaluate', action = 'store_true', help = 'evaluate model performance on test set')
 parser.add_argument('--learning_rate', type = float, default = 0.001, help = 'initial learning rate')
 parser.add_argument('--load', action = 'store_true', help = 'load pre-trained model')
-parser.add_argument('--model', type = str, default = None, help = 'absolute path to save or load model')
-parser.add_argument('--predict', action = 'store_true', help = 'evaluate model performance on test set')
+parser.add_argument('--pbar_file', type = str, default = None, help = 'absolute path to file to dump stdout')
 parser.add_argument('--resume', action = 'store_true', help = 'resume training from checkpoint')
+parser.add_argument('--self_supervised', action = 'store_true', help = 'perform self-supervised training or evaluation')
+parser.add_argument('--self_supervised_epochs', type = int, default = 100, help = 'total number of self-supervised training epochs')
+parser.add_argument('--self_supervised_history', type = str, default = None, help = 'absolute path to self-supervised training history')
+parser.add_argument('--self_supervised_model', type = str, default = None, help = 'absolute path to save or load self-supervised model')
 parser.add_argument('--split', type = float, default = 0.8, help = 'training and validation split ratio')
+parser.add_argument('--supervised', action = 'store_true', help = 'perform supervised training or evaluation')
+parser.add_argument('--supervised_epochs', type = int, default = 100, help = 'total number of supervised training epochs')
+parser.add_argument('--supervised_history', type = str, default = None, help = 'absolute path to supervised training history')
+parser.add_argument('--supervised_model', type = str, default = None, help = 'absolute path to save or load supervised model')
 parser.add_argument('--train_batch', type = int, default = 128, help = 'training batch size')
 parser.add_argument('--val_batch', type = int, default = 640, help = 'validation and test batch size')
 parser.add_argument('--visdom', action = 'store_true', help = 'create live training plots')
@@ -34,161 +40,79 @@ args = parser.parse_args()
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print('device: {}\n'.format(device))
 
-# instantiate dataloaders
-train_loader, val_loader = data.get_data_loaders(args.data, train_ratio = args.split, train_batch_size = args.train_batch, val_batch_size = args.val_batch)
-
-print('training set: {}'.format(len(train_loader) * args.train_batch))
-print('validation set: {}\n'.format(len(val_loader) * args.val_batch))
-
 # instantiate model
-if args.load:
-    print('loading pre-trained model\n')
-    model = torch.load(args.model, map_location = device)
-else:
-    model = model.Model().to(device)
+if args.architecture == 'alexnet':
+    model = models.AlexNet()
 
-# define loss function, optimizer and learning rate scheduler
+# instantiate loss function
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr = args.learning_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience = 0, verbose = True)
 
-# load model checkpoint
-if args.resume:
-    model = torch.load(args.checkpoint['model_state_dict'], map_location = device)
-    optimizer = torch.load(args.checkpoint['optimizer_state_dict'], map_location = device)
-    scheduler = torch.load(args.checkpoint['scheduler_state_dict'], map_location = device)
+# train model, if applicable
+if not args.evaluate:
+    print('training model')
 
-# train model
-if not args.predict:
-    print('training model\n')
+    # instantiate dataloaders
+    train_loader, val_loader = data.get_data_loaders(args.data, train_ratio = args.split, train_batch_size = args.train_batch, val_batch_size = args.val_batch)
 
-    # setup visdom for loss history visualization
-    if args.visdom:
-        viz = visdom.Visdom()
-        env_name = 'semi-supervised-imagenet-classification'
-        plot = None
+    train_size = len(train_loader) * args.train_batch
+    val_size = len(val_loader) * args.val_batch
 
-    # load checkpoints, if training to be resumed
-    if args.resume:
-        best_val_loss = args.checkpoint['best_val_loss']
-        no_improvement = args.checkpoint['no_improvement']
-        start_epoch = args.checkpoint['epoch']
-    else:
-        best_val_loss = float('inf')
-        no_improvement = 0
-        start_epoch = 0        
+    print('train set: {} images'.format(train_size))
+    print('val set: {} images\n'.format(val_size))
 
-    for epoch in range(start_epoch, args.epochs):
-        # setup progress bar
-        desc = "ITERATION - loss: {:.2f}"
-        pbar = tqdm.tqdm(desc = desc.format(0), total = len(train_loader), leave = False, file = args.file, initial = 0)
+    # instantiate optimizer and learning rate scheduler
+    optimizer = optim.Adam(model.parameters(), lr = args.learning_rate)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience = 3)
 
-        tqdm.tqdm.write('epoch {} of {}'.format(epoch + 1, args.epochs), file = args.file)
+    # perform self-supervised training, if applicable
+    if args.self_supervised:
+        print('self-supervised training\n')
+        # load pre-trained model, if applicable
+        if args.load:
+            print('loading pre-trained model\n')
+            model.load_state_dict(torch.load(args.self_supervised_model, map_location = device))
 
-        batch_idx = None
-        running_loss = 0
-        for batch_idx, data_ in enumerate(train_loader):
-            inputs, labels = data_
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+        # train
+        train.train(model, train_loader, train_size, val_loader, val_size, criterion, optimizer, scheduler, args.self_supervised_epochs, device, 
+                    args.self_supervised_model, args.checkpoint, args.self_supervised_history, args.resume, args.visdom, args.environment, args.pbar_file)
+    
+    # perform supervised training, if applicable
+    if args.supervised:
+        print('supervised training\n')
+        # prepare model for transfer learning
+        for param in model.parameters():
+            param.require_grad = False
 
-            # optimize
-            optimizer.zero_grad()
-
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            running_loss += loss.item()
-
-            # plot loss history
-            if args.visdom:
-                if not plot:
-                    plot = viz.line(X = np.array([((epoch * len(train_loader)) + batch_idx + 1), ((epoch * len(train_loader)) + batch_idx + 1)]), 
-                                    Y = np.array([loss.item(), loss.item()]), env = env_name, 
-                                    opts = dict(legend = ['train'], title = 'loss hist.', xlabel = 'iters.', ylabel = 'loss'))
-                else:
-                    viz.line(X = np.array([((epoch * len(train_loader)) + batch_idx + 1), ((epoch * len(train_loader)) + batch_idx + 1)]), 
-                            Y = np.array([loss.item(), loss.item()]), env = env_name, win = plot, name = 'train', update = 'append')
-
-            # evaluate model performance on val set
-            elif batch_idx == (len(train_loader) - 1):
-                model.eval()
-                with torch.no_grad():
-                    running_val_loss = 0
-                    for val_batch_idx, val_data in enumerate(val_loader):
-                        val_inputs, val_labels = val_data
-                        val_inputs = val_inputs.to(device)
-                        val_labels = val_labels.to(device)
-
-                        val_outputs = model(val_inputs)
-                        val_loss = criterion(val_outputs, val_labels)
-
-                        running_val_loss += val_loss.item()
-
-                    avg_val_loss = running_val_loss / (val_batch_idx + 1)
-
-                    # invoke learning rate scheduler
-                    scheduler.step(metrics = avg_val_loss)
-                
-                model.train()
-
-            # update progress bar
-            pbar.desc = desc.format(loss.item())
-            pbar.update()
+        model.out = nn.Linear(4096, 1000)
         
-        # print epoch end loss
-        tqdm.tqdm.write('training loss: {:.2f}, validation loss: {:.2f}\n'.format(running_loss / (batch_idx + 1), avg_val_loss), 
-                        file = args.file)
+        # load pre-trained model, if applicable
+        if args.load:
+            print('loading pre-trained model\n')
+            model.load_state_dict(torch.load(args.supervised_model, map_location = device))
 
-        # close progress bar
-        pbar.close()
+        # train
+        train.train(model, train_loader, train_size, val_loader, val_size, criterion, optimizer, scheduler, args.supervised_epochs, device,
+                    args.supervised_model, args.checkpoint, args.supervised_history, args.resume, args.visdom, args.environment, args.pbar_file)
 
-        # save checkpoint
-        torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 
-                    'scheduler_state_dict': scheduler.state_dict(), 'best_val_loss': best_val_loss, 'no_improvement': no_improvement}, args.checkpoint)
-
-        # save model and apply early stopping, if applicable
-        if avg_val_loss < best_val_loss:
-            torch.save(model, args.model)
-            best_val_loss = avg_val_loss
-            no_improvement = 0
-        else:
-            no_improvement += 1
-
-        if no_improvement == 5:
-            print('applying early stopping')
-            break
-
-# evaluate model
+# evaluate model, if applicable
 else:
-    print('evaluation mode\n')
+    print('evaluating model\n')
+
+    # load pre-trained model, if applicable
+    if args.load:
+        print('loading pre-trained model\n')
+        if args.supervised:
+            model.out = nn.Linear(500, 10)
+            model.load_state_dict(torch.load(args.supervised_model, map_location = device))
+        elif args.self_supervised:
+            model.load_state_dict(torch.load(args.self_supervised_model, map_location = device))
 
     # instantiate dataloader
-    test_loader = data.get_data_loaders(args.data, test_loader = True, test_batch_size = args.val_batch)
+    dataloader = data.get_data_loaders(args.data, test_loader = True, test_batch_size = args.val_batch)
+    data_size = len(dataloader) * args.val_batch
 
-    # setup progress bar
-    desc = "ITERATION - loss: {:.2f}"
-    pbar = tqdm.tqdm(desc = desc.format(0), total = len(val_loader), leave = False, file = args.file, initial = 0)
+    # instantiate loss function
+    criterion = nn.CrossEntropyLoss()
 
-    # evaluate model performance on test set
-    model.eval()
-    with torch.no_grad():
-        running_test_loss = 0
-        for test_batch_idx, test_data in enumerate(test_loader):
-            test_inputs, test_labels = test_data
-            test_inputs = test_inputs.to(device)
-            test_labels = test_labels.to(device)
-
-            test_outputs = model(test_inputs)
-            test_loss = criterion(test_outputs, test_labels)
-
-            running_test_loss += test_loss.item()
-    
-            # update progress bar
-            pbar.desc = desc.format(test_loss.item())
-            pbar.update()
-    
-    # print test set loss
-    tqdm.tqdm.write('test loss: {:.2f}\n'.format(test_running_loss / (test_batch_idx + 1)), file = args.file)
+    # evaluate
+    evaluate.evaluate(model, dataloader, data_size, criterion, device, True, args.pbar_file)
