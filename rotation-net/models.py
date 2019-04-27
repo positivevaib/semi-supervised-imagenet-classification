@@ -80,12 +80,12 @@ class BasicProjectionBlock(nn.Module):
 
 class BottleneckIdentityBlock(nn.Module):
     '''resnet bottleneck identity block'''
-    def __init__(self, channels, reduce = True):
+    def __init__(self, channels, factor = 1):
         '''constructor'''
         super().__init__()
-        self.conv1 = nn.Conv2d(channels, int(channels / 4) if reduce else channels, kernel_size = 1)
-        self.conv2 = nn.Conv2d(int(channels / 4) if reduce else channels, int(channels / 4) if reduce else channels, kernel_size = 3, padding = 2)
-        self.conv3 = nn.Conv2d(int(channels / 4) if reduce else channels, int(channels * 4), kernel_size = 1)
+        self.conv1 = nn.Conv2d(channels, int(channels / factor), kernel_size = 1)
+        self.conv2 = nn.Conv2d(int(channels / factor), int(channels / factor), kernel_size = 3, padding = 2)
+        self.conv3 = nn.Conv2d(int(channels / factor), int(channels * 4), kernel_size = 1)
         self.bn = nn.BatchNorm2d(channels)
 
     def forward(self, x):
@@ -101,12 +101,12 @@ class BottleneckIdentityBlock(nn.Module):
 
 class BottleneckProjectionBlock(nn.Module):
     '''resnet bottleneck projection block'''
-    def __init__(self, channels):
+    def __init__(self, channels, factor = 1):
         '''constructor'''
         super().__init__()
-        self.conv1 = nn.Conv2d(channels, int(channels / 4) if reduce else channels, kernel_size = 1)
-        self.conv2 = nn.Conv2d(int(channels / 4) if reduce else channels, int(channels / 4) if reduce else channels, kernel_size = 3, padding = 2)
-        self.conv3 = nn.Conv2d(int(channels / 4) if reduce else channels, int(channels * 4), kernel_size = 1)
+        self.conv1 = nn.Conv2d(channels, int(channels / factor), kernel_size = 1)
+        self.conv2 = nn.Conv2d(int(channels / factor), int(channels / factor), kernel_size = 3, padding = 2)
+        self.conv3 = nn.Conv2d(int(channels / factor), int(channels * 4), kernel_size = 1)
         self.bn = nn.BatchNorm2d(channels)
         self.proj = nn.Conv2d(channels, (channels * 4), kernel_size = 1, stride = 2)
 
@@ -182,11 +182,11 @@ class ResNet50(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 7, stride = 2, padding = 3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = [BottleneckIdentityBlock(64), BottleneckIdentityBlock(64), BottleneckIdentityBlock(64)]
-        self.conv3 = [BottleneckProjectionBlock(64), BottleneckIdentityBlock(128), BottleneckIdentityBlock(128), BottleneckIdentityBlock(128)]
-        self.conv4 = [BottleneckProjectionBlock(128), BottleneckIdentityBlock(256), BottleneckIdentityBlock(256), BottleneckIdentityBlock(256), 
-                        BottleneckIdentityBlock(256), BottleneckIdentityBlock(256)]
-        self.conv5 = [BottleneckProjectionBlock(256), BottleneckIdentityBlock(512), BottleneckIdentityBlock(512)]
+        self.conv2 = [BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4)]
+        self.conv3 = [BottleneckProjectionBlock(64, 2), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4)]
+        self.conv4 = [BottleneckProjectionBlock(128, 2), BottleneckIdentityBlock(256, 4), BottleneckIdentityBlock(256, 4), BottleneckIdentityBlock(256, 4), 
+                        BottleneckIdentityBlock(256, 4), BottleneckIdentityBlock(256, 4)]
+        self.conv5 = [BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4)]
         self.out = nn.Linear(2048, 4) 
 
     def forward(self, x):
@@ -209,14 +209,14 @@ class ResNet101(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 7, stride = 2, padding = 3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = [BottleneckIdentityBlock(64), BottleneckIdentityBlock(64), BottleneckIdentityBlock(64)]
-        self.conv3 = [BottleneckProjectionBlock(64), BottleneckIdentityBlock(128), BottleneckIdentityBlock(128), BottleneckIdentityBlock(128)]
+        self.conv2 = [BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4)]
+        self.conv3 = [BottleneckProjectionBlock(64, 2), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4)]
 
-        self.conv4 = [BottleneckProjectionBlock(128)]
+        self.conv4 = [BottleneckProjectionBlock(128, 2)]
         for _ in range(22):
-            self.conv4.append(BottleneckIdentityBlock(256))
+            self.conv4.append(BottleneckIdentityBlock(256, 4))
 
-        self.conv5 = [BottleneckProjectionBlock(256), BottleneckIdentityBlock(512), BottleneckIdentityBlock(512)]
+        self.conv5 = [BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4)]
         self.out = nn.Linear(2048, 4)
          
     def forward(self, x):
@@ -239,17 +239,17 @@ class ResNet152(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 7, stride = 2, padding = 3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = [BottleneckIdentityBlock(64), BottleneckIdentityBlock(64), BottleneckIdentityBlock(64)]
+        self.conv2 = [BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4)]
 
-        self.conv3 = [BottleneckProjectionBlock(64)]
+        self.conv3 = [BottleneckProjectionBlock(64, 2)]
         for _ in range(7):
-            self.conv3.append(BottleneckIdentityBlock(128))
+            self.conv3.append(BottleneckIdentityBlock(128, 4))
 
-        self.conv4 = [BottleneckProjectionBlock(128)]
+        self.conv4 = [BottleneckProjectionBlock(128, 2)]
         for _ in range(35):
-            self.conv4.append(BottleneckIdentityBlock(256))
+            self.conv4.append(BottleneckIdentityBlock(256, 4))
 
-        self.conv5 = [BottleneckProjectionBlock(256), BottleneckIdentityBlock(512), BottleneckIdentityBlock(512)]
+        self.conv5 = [BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4)]
         self.out = nn.Linear(2048, 4)
          
     def forward(self, x):
