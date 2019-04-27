@@ -110,9 +110,9 @@ class BottleneckIdentityBlock(nn.Module):
                                kernel_size=3,
                                padding=1)
         self.bn1_2 = nn.BatchNorm2d(int(channels / 4))
-        self.conv3 = nn.Conv2d(int(channels / 4), (channels * 4),
+        self.conv3 = nn.Conv2d(int(channels / 4), channels,
                                kernel_size=1)
-        self.bn3 = nn.BatchNorm2d((channels * 4))
+        self.bn3 = nn.BatchNorm2d(channels)
 
     def forward(self, x):
         '''forward prop'''
@@ -120,7 +120,6 @@ class BottleneckIdentityBlock(nn.Module):
         x = F.relu(self.bn1_2(self.conv1(x)))
         x = F.relu(self.bn1_2(self.conv2(x)))
         x = self.bn3(self.conv3(x))
-        print('id', x.shape, x_orig.shape)
         x += x_orig
         x = F.relu(x)
 
@@ -156,7 +155,6 @@ class BottleneckProjectionBlock(nn.Module):
         x = F.relu(self.bn1_2(self.conv1(x)))
         x = F.relu(self.bn1_2(self.conv2(x)))
         x = self.bn3_proj(self.conv3(x))
-        print('proj', x.shape, x_orig.shape)
         x += x_orig
         x = F.relu(x)
 
