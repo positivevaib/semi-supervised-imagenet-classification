@@ -105,7 +105,7 @@ class BottleneckProjectionBlock(nn.Module):
     def __init__(self, channels, factor = 1):
         '''constructor'''
         super().__init__()
-        self.conv1 = nn.Conv2d(channels, int(channels / factor), kernel_size = 1)
+        self.conv1 = nn.Conv2d(channels, int(channels / factor), kernel_size = 1, stride = 2)
         self.conv2 = nn.Conv2d(int(channels / factor), int(channels / factor), kernel_size = 3, padding = 2)
         self.bn1_2 = nn.BatchNorm2d(int(channels / factor))
         self.conv3 = nn.Conv2d(int(channels / factor), (channels * 4), kernel_size = 1)
