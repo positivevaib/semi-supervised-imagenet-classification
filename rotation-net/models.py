@@ -129,10 +129,10 @@ class ResNet18(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 7, stride = 2, padding = 3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = [BasicIdentityBlock(64), BasicIdentityBlock(64)]
-        self.conv3 = [BasicProjectionBlock(64), BasicIdentityBlock(128)]
-        self.conv4 = [BasicProjectionBlock(128), BasicIdentityBlock(256)]
-        self.conv5 = [BasicProjectionBlock(256), BasicIdentityBlock(512)]
+        self.conv2 = nn.Sequential(BasicIdentityBlock(64), BasicIdentityBlock(64))
+        self.conv3 = nn.Sequential(BasicProjectionBlock(64), BasicIdentityBlock(128))
+        self.conv4 = nn.Sequential(BasicProjectionBlock(128), BasicIdentityBlock(256))
+        self.conv5 = nn.Sequential(BasicProjectionBlock(256), BasicIdentityBlock(512))
         self.out = nn.Linear(512, 4) 
 
     def forward(self, x):
@@ -154,11 +154,11 @@ class ResNet34(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 7, stride = 2, padding = 3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = [BasicIdentityBlock(64), BasicIdentityBlock(64), BasicIdentityBlock(64)]
-        self.conv3 = [BasicProjectionBlock(64), BasicIdentityBlock(128), BasicIdentityBlock(128), BasicIdentityBlock(128)]
-        self.conv4 = [BasicProjectionBlock(128), BasicIdentityBlock(256), BasicIdentityBlock(256), BasicIdentityBlock(256), 
-                        BasicIdentityBlock(256), BasicIdentityBlock(256)]
-        self.conv5 = [BasicProjectionBlock(256), BasicIdentityBlock(512), BasicIdentityBlock(512)]
+        self.conv2 = nn.Sequential(BasicIdentityBlock(64), BasicIdentityBlock(64), BasicIdentityBlock(64))
+        self.conv3 = nn.Sequential(BasicProjectionBlock(64), BasicIdentityBlock(128), BasicIdentityBlock(128), BasicIdentityBlock(128))
+        self.conv4 = nn.Sequential(BasicProjectionBlock(128), BasicIdentityBlock(256), BasicIdentityBlock(256), BasicIdentityBlock(256), 
+                                    BasicIdentityBlock(256), BasicIdentityBlock(256))
+        self.conv5 = nn.Sequential(BasicProjectionBlock(256), BasicIdentityBlock(512), BasicIdentityBlock(512))
         self.out = nn.Linear(512, 4) 
 
     def forward(self, x):
@@ -180,11 +180,12 @@ class ResNet50(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 7, stride = 2, padding = 3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = [BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4)]
-        self.conv3 = [BottleneckProjectionBlock(64, 2), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4)]
-        self.conv4 = [BottleneckProjectionBlock(128, 2), BottleneckIdentityBlock(256, 4), BottleneckIdentityBlock(256, 4), BottleneckIdentityBlock(256, 4), 
-                        BottleneckIdentityBlock(256, 4), BottleneckIdentityBlock(256, 4)]
-        self.conv5 = [BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4)]
+        self.conv2 = nn.Sequential(BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4))
+        self.conv3 = nn.Sequential(BottleneckProjectionBlock(64, 2), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4), 
+                                    BottleneckIdentityBlock(128, 4))
+        self.conv4 = nn.Sequential(BottleneckProjectionBlock(128, 2), BottleneckIdentityBlock(256, 4), BottleneckIdentityBlock(256, 4), 
+                                    BottleneckIdentityBlock(256, 4), BottleneckIdentityBlock(256, 4), BottleneckIdentityBlock(256, 4))
+        self.conv5 = nn.Sequential(BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4))
         self.out = nn.Linear(2048, 4) 
 
     def forward(self, x):
@@ -206,15 +207,16 @@ class ResNet101(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 7, stride = 2, padding = 3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = [BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4)]
-        self.conv3 = [BottleneckProjectionBlock(64, 2), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4)]
+        self.conv2 = nn.Sequential(BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4))
+        self.conv3 = nn.Sequential(BottleneckProjectionBlock(64, 2), BottleneckIdentityBlock(128, 4), BottleneckIdentityBlock(128, 4), 
+                                    BottleneckIdentityBlock(128, 4))
 
         self.conv4 = [BottleneckProjectionBlock(128, 2)]
         for _ in range(22):
             self.conv4.append(BottleneckIdentityBlock(256, 4))
         self.conv4 = nn.Sequential(*self.conv4)
 
-        self.conv5 = [BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4)]
+        self.conv5 = nn.Sequential(BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4))
         self.out = nn.Linear(2048, 4)
          
     def forward(self, x):
@@ -236,7 +238,7 @@ class ResNet152(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size = 7, stride = 2, padding = 3)
         self.bn = nn.BatchNorm2d(64)
-        self.conv2 = [BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4)]
+        self.conv2 = nn.Sequential(BottleneckIdentityBlock(64, 1), BottleneckIdentityBlock(64, 4), BottleneckIdentityBlock(64, 4))
 
         self.conv3 = [BottleneckProjectionBlock(64, 2)]
         for _ in range(7):
@@ -248,7 +250,7 @@ class ResNet152(nn.Module):
             self.conv4.append(BottleneckIdentityBlock(256, 4))
         self.conv4 = nn.Sequential(*self.conv4)
 
-        self.conv5 = [BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4)]
+        self.conv5 = nn.Sequential(BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4))
         self.out = nn.Linear(2048, 4)
          
     def forward(self, x):
