@@ -85,15 +85,16 @@ class BottleneckIdentityBlock(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(channels, int(channels / factor), kernel_size = 1)
         self.conv2 = nn.Conv2d(int(channels / factor), int(channels / factor), kernel_size = 3, padding = 2)
-        self.conv3 = nn.Conv2d(int(channels / factor), int(channels * 4), kernel_size = 1)
-        self.bn = nn.BatchNorm2d(channels)
+        self.bn1_2 = nn.BatchNorm2d(int(channels / factor))
+        self.conv3 = nn.Conv2d(int(channels / factor), (channels * 4), kernel_size = 1)
+        self.bn3 = nn.BatchNorm2d((channels * 4))
 
     def forward(self, x):
         '''forward prop'''
         x_orig = x
-        x = F.relu(self.bn(self.conv1(x)))
-        x = F.relu(self.bn(self.conv2(x)))
-        x = self.bn(self.conv3(x))
+        x = F.relu(self.bn1_2(self.conv1(x)))
+        x = F.relu(self.bn1_2(self.conv2(x)))
+        x = self.bn3(self.conv3(x))
         x += x_orig
         x = F.relu(x)
 
@@ -106,17 +107,18 @@ class BottleneckProjectionBlock(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(channels, int(channels / factor), kernel_size = 1)
         self.conv2 = nn.Conv2d(int(channels / factor), int(channels / factor), kernel_size = 3, padding = 2)
-        self.conv3 = nn.Conv2d(int(channels / factor), int(channels * 4), kernel_size = 1)
-        self.bn = nn.BatchNorm2d(channels)
+        self.bn1_2 = nn.BatchNorm2d(int(channels / factor))
+        self.conv3 = nn.Conv2d(int(channels / factor), (channels * 4), kernel_size = 1)
         self.proj = nn.Conv2d(channels, (channels * 4), kernel_size = 1, stride = 2)
+        self.bn3_proj = nn.BatchNorm2d((channels * 4))
 
     def forward(self, x):
         '''forward prop'''
         x_orig = x
-        x_orig = self.bn(self.proj(x_orig))
-        x = F.relu(self.bn(self.conv1(x)))
-        x = F.relu(self.bn(self.conv2(x)))
-        x = self.bn(self.conv3(x))
+        x_orig = self.bn3_proj(self.proj(x_orig))
+        x = F.relu(self.bn1_2(self.conv1(x)))
+        x = F.relu(self.bn1_2(self.conv2(x)))
+        x = self.bn3_proj(self.conv3(x))
         x += x_orig
         x = F.relu(x)
 
