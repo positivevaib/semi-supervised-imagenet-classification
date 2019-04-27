@@ -51,7 +51,7 @@ class BasicIdentityBlock(nn.Module):
         '''forward prop'''
         x_orig = x
         x = F.relu(self.bn(self.conv(x)))
-        x = self.bn(self.conv(x)))
+        x = self.bn(self.conv(x))
         x += x_orig
         x = F.relu(x)
 
