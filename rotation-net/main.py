@@ -160,6 +160,12 @@ elif args.architecture == 'resnet152':
 
 model.to(device)
 
+# load pre-trained model
+if args.self_supervised_load:
+    print('loading pre-trained model\n')
+    model.load_state_dict(
+        torch.load(args.self_supervised_model, map_location=device))
+
 # instantiate loss function
 criterion = nn.CrossEntropyLoss()
 
@@ -187,12 +193,6 @@ if args.train:
         # instantiate optimizer and learning rate scheduler
         optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3)
-
-        # load pre-trained model
-        if args.self_supervised_load:
-            print('loading pre-trained model\n')
-            model.load_state_dict(
-                torch.load(args.self_supervised_model, map_location=device))
 
         # train
         train.train(model, train_loader, train_size, val_loader, val_size,
