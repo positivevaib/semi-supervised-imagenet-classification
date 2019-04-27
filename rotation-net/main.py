@@ -13,24 +13,28 @@ import evaluate
 # create argument parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--architecture',
-                    type=str,
                     default='alexnet',
-                    help='type of model architecture to use')
-parser.add_argument('--environment',
                     type=str,
+                    help='type of model architecture to use',
+                    metavar='NAME')
+parser.add_argument('--environment',
                     default='semi-supervised-imagenet-classification',
-                    help='visdom environment name')
+                    type=str,
+                    help='visdom environment name',
+                    metavar='NAME')
 parser.add_argument('--learning_rate',
-                    type=float,
                     default=0.001,
-                    help='initial learning rate')
+                    type=float,
+                    help='initial learning rate',
+                    metavar='RATE')
 parser.add_argument('--matplotlib',
                     action='store_true',
                     help='display matplotlib figure')
 parser.add_argument('--pbar_file',
-                    type=str,
                     default=None,
-                    help='absolute path to file to dump stdout')
+                    type=str,
+                    help='absolute path to file to dump stdout',
+                    metavar='PATH')
 parser.add_argument('--resume',
                     action='store_true',
                     help='resume training from checkpoint')
@@ -38,78 +42,98 @@ parser.add_argument('--self_supervised',
                     action='store_true',
                     help='perform self-supervised training or evaluation')
 parser.add_argument('--self_supervised_checkpoint',
-                    type=str,
                     default=None,
-                    help='absolute path to self_supervised model checkpoint')
+                    type=str,
+                    help='absolute path to self_supervised model checkpoint',
+                    metavar='PATH')
 parser.add_argument('--self_supervised_data',
-                    type=str,
                     default=None,
-                    help='absolute path to self-supervised dataset')
+                    type=str,
+                    help='absolute path to self-supervised dataset',
+                    metavar='PATH')
 parser.add_argument('--self_supervised_epochs',
-                    type=int,
                     default=100,
-                    help='total number of self-supervised training epochs')
+                    type=int,
+                    help='total number of self-supervised training epochs',
+                    metavar='NUMBER')
 parser.add_argument('--self_supervised_history',
-                    type=str,
                     default=None,
-                    help='absolute path to self-supervised training history')
+                    type=str,
+                    help='absolute path to self-supervised training history',
+                    metavar='PATH')
 parser.add_argument('--self_supervised_load',
                     action='store_true',
                     help='load pre-trained self-supervised model')
 parser.add_argument('--self_supervised_model',
-                    type=str,
                     default=None,
-                    help='absolute path to save or load self-supervised model')
+                    type=str,
+                    help='absolute path to save or load self-supervised model',
+                    metavar='PATH')
 parser.add_argument('--self_supervised_split',
-                    type=float,
                     default=0.8,
-                    help='self_supervised training and validation split ratio')
+                    type=float,
+                    help='self_supervised training and validation split ratio',
+                    metavar='RATIO')
 parser.add_argument('--supervised',
                     action='store_true',
                     help='perform supervised training or evaluation')
 parser.add_argument('--supervised_checkpoint',
-                    type=str,
                     default=None,
-                    help='absolute path to supervised model checkpoint')
+                    type=str,
+                    help='absolute path to supervised model checkpoint',
+                    metavar='PATH')
 parser.add_argument('--supervised_data',
-                    type=str,
                     default=None,
-                    help='absolute path to supervised dataset')
+                    type=str,
+                    help='absolute path to supervised dataset',
+                    metavar='PATH')
 parser.add_argument('--supervised_epochs',
-                    type=int,
                     default=100,
-                    help='total number of supervised training epochs')
+                    type=int,
+                    help='total number of supervised training epochs',
+                    metavar='NUMBER')
 parser.add_argument('--supervised_history',
-                    type=str,
                     default=None,
-                    help='absolute path to supervised training history')
+                    type=str,
+                    help='absolute path to supervised training history',
+                    metavar='PATH')
 parser.add_argument('--supervised_load',
                     action='store_true',
                     help='load pre-trained supervised model')
 parser.add_argument('--supervised_model',
-                    type=str,
                     default=None,
-                    help='absolute path to save or load supervised model')
+                    type=str,
+                    help='absolute path to save or load supervised model',
+                    metavar='PATH')
 parser.add_argument('--supervised_split',
-                    type=float,
                     default=0.8,
-                    help='supervised training and validation split ratio')
+                    type=float,
+                    help='supervised training and validation split ratio',
+                    metavar='RATIO')
 parser.add_argument('--test',
                     action='store_true',
                     help='evaluate model performance on test set')
-parser.add_argument('--test_data',
-                    type=str,
-                    default=None,
-                    help='absolute path to test dataset')
-parser.add_argument('--train', action='store_true', help='train model')
-parser.add_argument('--train_batch',
-                    type=int,
-                    default=128,
-                    help='training batch size')
-parser.add_argument('--val_batch',
+parser.add_argument('--test_batch',
                     type=int,
                     default=640,
-                    help='validation and test batch size')
+                    help='test batch size',
+                    metavar='NUMBER')
+parser.add_argument('--test_data',
+                    default=None,
+                    type=str,
+                    help='absolute path to test dataset',
+                    metavar='PATH')
+parser.add_argument('--train', action='store_true', help='train model')
+parser.add_argument('--train_batch',
+                    default=128,
+                    type=int,
+                    help='training batch size',
+                    metavar='NUMBER')
+parser.add_argument('--val_batch',
+                    default=640,
+                    type=int,
+                    help='validation batch size',
+                    metavar='NUMBER')
 parser.add_argument('--visdom',
                     action='store_true',
                     help='create live training plots')
@@ -229,7 +253,7 @@ if args.train:
 
 # test model
 else:
-    print('evaluating model\n')
+    print('testing model\n')
 
     # prepare model
     if args.supervised:
@@ -244,14 +268,14 @@ else:
             model.out = nn.Linear(2048, 1000).to(device)
 
     # load pre-trained model
-    if args.self_supervised_load:
-        print('loading pre-trained model\n')
-        model.load_state_dict(
-            torch.load(args.self_supervised_model, map_location=device))
-    elif args.supervised_load:
+    if args.supervised_load:
         print('loading pre-trained model\n')
         model.load_state_dict(
             torch.load(args.supervised_model, map_location=device))
+    elif args.self_supervised_load:
+        print('loading pre-trained model\n')
+        model.load_state_dict(
+            torch.load(args.self_supervised_model, map_location=device))
 
     # instantiate dataloader
     dataloader = data.get_data_loaders(args.test_data,
