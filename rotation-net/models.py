@@ -144,10 +144,10 @@ class BottleneckProjectionBlock(nn.Module):
         self.bn1_2 = nn.BatchNorm2d(int(channels / factor))
         self.conv3 = nn.Conv2d(int(channels / factor), (channels * 4),
                                kernel_size=1)
-        self.proj = nn.Conv2d(channels, (channels * (4 / factor)),
+        self.proj = nn.Conv2d(channels, int(channels * (4 / factor)),
                               kernel_size=1,
                               stride=2)
-        self.bn3_proj = nn.BatchNorm2d((channels * (4 / factor)))
+        self.bn3_proj = nn.BatchNorm2d(int(channels * (4 / factor)))
 
     def forward(self, x):
         '''forward prop'''
