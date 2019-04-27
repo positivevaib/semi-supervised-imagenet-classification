@@ -215,6 +215,7 @@ class ResNet101(nn.Module):
         self.conv4 = [BottleneckProjectionBlock(128, 2)]
         for _ in range(22):
             self.conv4.append(BottleneckIdentityBlock(256, 4))
+        self.conv4 = nn.Sequential(*self.conv4)
 
         self.conv5 = [BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4)]
         self.out = nn.Linear(2048, 4)
@@ -244,10 +245,12 @@ class ResNet152(nn.Module):
         self.conv3 = [BottleneckProjectionBlock(64, 2)]
         for _ in range(7):
             self.conv3.append(BottleneckIdentityBlock(128, 4))
+        self.conv3 = nn.Sequential(*self.conv3)
 
         self.conv4 = [BottleneckProjectionBlock(128, 2)]
         for _ in range(35):
             self.conv4.append(BottleneckIdentityBlock(256, 4))
+        self.conv4 = nn.Sequential(*self.conv4)
 
         self.conv5 = [BottleneckProjectionBlock(256, 2), BottleneckIdentityBlock(512, 4), BottleneckIdentityBlock(512, 4)]
         self.out = nn.Linear(2048, 4)
