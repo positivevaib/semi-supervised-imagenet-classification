@@ -43,6 +43,16 @@ print('device: {}\n'.format(device))
 # instantiate model
 if args.architecture == 'alexnet':
     model = models.AlexNet()
+elif args.architecture == 'resnet18':
+    model = models.ResNet18()
+elif args.architecture == 'resnet34':
+    model = models.ResNet34()
+elif args.architecture == 'resnet50':
+    model = models.ResNet50()
+elif args.architecture == 'resnet101':
+    model = models.ResNet101()
+elif args.architecture == 'resnet152':
+    model = models.ResNet152()
 
 model.to(device)
 
@@ -85,7 +95,12 @@ if not args.evaluate:
         for param in model.parameters():
             param.require_grad = False
 
-        model.out = nn.Linear(4096, 1000).to(device)
+        if args.architecture == 'alexnet':
+            model.out = nn.Linear(4096, 1000).to(device)
+        elif args.architecture == 'resnet18' or args.architecture == 'resnet34':
+            model.out = nn.Linear(512, 1000).to(device)
+        elif args.architecture == 'resnet50' or args.architecture == 'resnet101' or args.architecture == 'resnet152':
+            model.out = nn.Linear(2048, 1000).to(device)
         
         # load pre-trained model, if applicable
         if args.load:
