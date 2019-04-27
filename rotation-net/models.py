@@ -110,8 +110,7 @@ class BottleneckIdentityBlock(nn.Module):
                                kernel_size=3,
                                padding=1)
         self.bn1_2 = nn.BatchNorm2d(int(channels / 4))
-        self.conv3 = nn.Conv2d(int(channels / 4), channels,
-                               kernel_size=1)
+        self.conv3 = nn.Conv2d(int(channels / 4), channels, kernel_size=1)
         self.bn3 = nn.BatchNorm2d(channels)
 
     def forward(self, x):
@@ -141,9 +140,11 @@ class BottleneckProjectionBlock(nn.Module):
                                kernel_size=3,
                                padding=1)
         self.bn1_2 = nn.BatchNorm2d(int(channels / factor))
-        self.conv3 = nn.Conv2d(int(channels / factor), (channels * 4),
+        self.conv3 = nn.Conv2d(int(channels / factor),
+                               int(channels * (4 / factor)),
                                kernel_size=1)
-        self.proj = nn.Conv2d(channels, int(channels * (4 / factor)),
+        self.proj = nn.Conv2d(channels,
+                              int(channels * (4 / factor)),
                               kernel_size=1,
                               stride=2)
         self.bn3_proj = nn.BatchNorm2d(int(channels * (4 / factor)))
@@ -189,7 +190,7 @@ class ResNet18(nn.Module):
         x = self.conv3(x)
         x = self.conv4(x)
         x = self.conv5(x)
-        x = F.avg_pool2d(self.conv5_2(x), kernel_size=3)
+        x = F.avg_pool2d(x, kernel_size=3)
         x = self.out(x)
 
         return x
@@ -231,7 +232,7 @@ class ResNet34(nn.Module):
         x = self.conv3(x)
         x = self.conv4(x)
         x = self.conv5(x)
-        x = F.avg_pool2d(self.conv5_2(x), kernel_size=3)
+        x = F.avg_pool2d(x, kernel_size=3)
         x = self.out(x)
 
         return x
@@ -273,7 +274,7 @@ class ResNet50(nn.Module):
         x = self.conv3(x)
         x = self.conv4(x)
         x = self.conv5(x)
-        x = F.avg_pool2d(self.conv5_2(x), kernel_size=3)
+        x = F.avg_pool2d(x, kernel_size=3)
         x = self.out(x)
 
         return x
@@ -313,7 +314,7 @@ class ResNet101(nn.Module):
         x = self.conv3(x)
         x = self.conv4(x)
         x = self.conv5(x)
-        x = F.avg_pool2d(self.conv5_2(x), kernel_size=3)
+        x = F.avg_pool2d(x, kernel_size=3)
         x = self.out(x)
 
         return x
@@ -353,7 +354,7 @@ class ResNet152(nn.Module):
         x = self.conv3(x)
         x = self.conv4(x)
         x = self.conv5(x)
-        x = F.avg_pool2d(self.conv5_2(x), kernel_size=3)
+        x = F.avg_pool2d(x, kernel_size=3)
         x = self.out(x)
 
         return x
