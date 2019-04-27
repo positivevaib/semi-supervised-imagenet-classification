@@ -44,6 +44,8 @@ print('device: {}\n'.format(device))
 if args.architecture == 'alexnet':
     model = models.AlexNet()
 
+model.to(device)
+
 # instantiate loss function
 criterion = nn.CrossEntropyLoss()
 
@@ -83,7 +85,7 @@ if not args.evaluate:
         for param in model.parameters():
             param.require_grad = False
 
-        model.out = nn.Linear(4096, 1000)
+        model.out = nn.Linear(4096, 1000).to(device)
         
         # load pre-trained model, if applicable
         if args.load:
