@@ -40,7 +40,7 @@ parser.add_argument('--resume',
                     help='resume training from checkpoint')
 parser.add_argument('--self_supervised',
                     action='store_true',
-                    help='perform self-supervised training or evaluation')
+                    help='perform self-supervised training or testing')
 parser.add_argument('--self_supervised_checkpoint',
                     default=None,
                     type=str,
@@ -76,7 +76,7 @@ parser.add_argument('--self_supervised_split',
                     metavar='RATIO')
 parser.add_argument('--supervised',
                     action='store_true',
-                    help='perform supervised training or evaluation')
+                    help='perform supervised training or testing')
 parser.add_argument('--supervised_checkpoint',
                     default=None,
                     type=str,
@@ -252,11 +252,11 @@ if args.train:
                     args.environment, args.matplotlib, args.pbar_file)
 
 # test model
-else:
+if args.test:
     print('testing model\n')
 
     # prepare model
-    if args.supervised:
+    if args.supervised and not args.train:
         if args.architecture == 'alexnet':
             model.out = nn.Linear(4096, 1000).to(device)
         elif args.architecture == 'resnet18' or \
