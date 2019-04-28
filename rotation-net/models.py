@@ -191,7 +191,7 @@ class ResNet18(nn.Module):
         x = self.conv4(x)
         x = self.conv5(x)
         x = F.avg_pool2d(x, kernel_size=3)
-        x = x.view(-1, 2048)
+        x = x.view(-1, 512)
         x = self.out(x)
 
         return x
@@ -234,7 +234,7 @@ class ResNet34(nn.Module):
         x = self.conv4(x)
         x = self.conv5(x)
         x = F.avg_pool2d(x, kernel_size=3)
-        x = x.view(-1, 2048)
+        x = x.view(-1, 512)
         x = self.out(x)
 
         return x

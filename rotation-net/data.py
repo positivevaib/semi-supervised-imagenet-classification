@@ -34,10 +34,10 @@ def get_data_loaders(path,
                                      batch_size=val_batch_size,
                                      shuffle=False)
 
-        return train_loader, val_loader
+        return train_loader, train_set_size, val_loader, val_set_size
     else:
         test_loader = data.DataLoader(dataset,
                                       batch_size=test_batch_size,
                                       shuffle=False)
 
-        return test_loader
+        return test_loader, len(dataset)

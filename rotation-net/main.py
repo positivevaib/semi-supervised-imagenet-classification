@@ -178,14 +178,11 @@ if args.train:
         print('self-supervised training\n')
 
         # instantiate dataloaders
-        train_loader, val_loader = data.get_data_loaders(
+        train_loader, train_size, val_loader, val_size = data.get_data_loaders(
             args.self_supervised_data,
             train_ratio=args.self_supervised_split,
             train_batch_size=args.train_batch,
             val_batch_size=args.val_batch)
-
-        train_size = len(train_loader) * args.train_batch
-        val_size = len(val_loader) * args.val_batch
 
         print('train set: {} images'.format(train_size))
         print('val set: {} images\n'.format(val_size))
@@ -208,14 +205,11 @@ if args.train:
         print('supervised training\n')
 
         # instantiate dataloaders
-        train_loader, val_loader = data.get_data_loaders(
+        train_loader, train_size, val_loader, val_size = data.get_data_loaders(
             args.supervised_data,
             train_ratio=args.supervised_split,
             train_batch_size=args.train_batch,
             val_batch_size=args.val_batch)
-
-        train_size = len(train_loader) * args.train_batch
-        val_size = len(val_loader) * args.val_batch
 
         print('train set: {} images'.format(train_size))
         print('val set: {} images\n'.format(val_size))
@@ -278,10 +272,8 @@ if args.test:
             torch.load(args.self_supervised_model, map_location=device))
 
     # instantiate dataloader
-    dataloader = data.get_data_loaders(args.test_data,
-                                       test_loader=True,
-                                       test_batch_size=args.val_batch)
-    data_size = len(dataloader) * args.val_batch
+    dataloader, data_size = data.get_data_loaders(
+        args.test_data, test_loader=True, test_batch_size=args.val_batch)
 
     # instantiate loss function
     criterion = nn.CrossEntropyLoss()
