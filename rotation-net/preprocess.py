@@ -46,6 +46,12 @@ def rotate(img, deg):
     return img
 
 
+# create directory
+if not os.path.isdir(args.new_data):
+    os.mkdir(args.new_data)
+    for i in range(4):
+        os.mkdir(os.path.join(args.new_data, str(i)))
+
 # process data
 for dir_ in os.listdir(args.orig_data):
     idx = 0
