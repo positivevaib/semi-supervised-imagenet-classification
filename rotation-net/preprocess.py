@@ -51,7 +51,7 @@ for dir_ in os.listdir(args.orig_data):
     idx = 0
     for img_name in os.listdir(os.path.join(args.orig_data, dir_)):
         if img_name.endswith('JPEG'):
-            img = Image.open(os.path.join(args.orig_data, dir_, image_name))
+            img = Image.open(os.path.join(args.orig_data, dir_, img_name))
 
             if idx % 4 == 0:
                 deg = 0
